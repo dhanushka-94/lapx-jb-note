@@ -116,6 +116,17 @@
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
                 </div>
+                
+                <!-- Disable SMS Field -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center mt-2">
+                        <input type="checkbox" name="disable_sms" id="disable_sms" value="1" {{ old('disable_sms', $customer->disable_sms) ? 'checked' : '' }} class="rounded text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <label for="disable_sms" class="ml-2 block text-sm text-gray-700">
+                            <i class="fas fa-sms text-gray-400 mr-1"></i>Disable SMS notifications for this customer
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 ml-6">Check this box if the customer has requested not to receive SMS notifications about service jobs.</p>
+                </div>
             </div>
             
             <div class="border-t border-gray-200 pt-6">

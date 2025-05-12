@@ -127,11 +127,13 @@
                 
                 <!-- Assigned To -->
                 <div>
-                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Assign To Technician</label>
                     <select name="assigned_to" id="assigned_to" class="form-select rounded-md shadow-sm mt-1 block w-full @error('assigned_to') border-red-500 @enderror">
                         <option value="">Not assigned</option>
                         @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('assigned_to', $job->assigned_to) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @if($user->role == 'technician' && $user->is_active)
+                                <option value="{{ $user->id }}" {{ old('assigned_to', $job->assigned_to) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @endif
                         @endforeach
                     </select>
                     @error('assigned_to')
@@ -141,8 +143,8 @@
                 
                 <!-- Cost -->
                 <div>
-                    <label for="cost" class="block text-sm font-medium text-gray-700 mb-1">Cost ($)</label>
-                    <input type="number" name="cost" id="cost" value="{{ old('cost', $job->cost) }}" step="0.01" min="0" class="form-input rounded-md shadow-sm mt-1 block w-full @error('cost') border-red-500 @enderror" placeholder="0.00">
+                    <label for="cost" class="block text-sm font-medium text-gray-700 mb-1">Estimated Cost (LKR)</label>
+                    <input type="text" name="cost" id="cost" value="{{ old('cost', $job->cost) }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('cost') border-red-500 @enderror" placeholder="0.00">
                     @error('cost')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -238,4 +240,78 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sri Lankan price formatting
+    const costInput = document.getElementById('cost');
+    
+    // Format on initial load
+    formatCurrency(costInput);
+    
+    // Clear the field on focus
+    costInput.addEventListener('focus', function(e) {
+        // Save the current value for restoring if the user doesn't enter anything
+        this.dataset.previousValue = this.value;
+        // Clear the input
+        this.value = '';
+    });
+    
+    // Format on input change
+    costInput.addEventListener('input', function(e) {
+        if (this.value !== '') {
+            formatCurrency(this);
+        }
+    });
+    
+    // Format on focus out (to ensure complete formatting)
+    costInput.addEventListener('blur', function(e) {
+        // If the field was left empty, restore the previous value
+        if (this.value === '') {
+            this.value = this.dataset.previousValue || '0.00';
+        }
+        formatCurrency(this, true);
+    });
+    
+    function formatCurrency(input, isBlur = false) {
+        // Get input value and remove all non-numeric characters except decimal point
+        let value = input.value.replace(/[^\d.]/g, '');
+        
+        // Handle multiple decimal points - keep only the first one
+        let parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Handle leading decimal point
+        if (value.startsWith('.')) {
+            value = '0' + value;
+        }
+        
+        // Convert to number and back to string to normalize
+        let number = parseFloat(value);
+        if (isNaN(number)) {
+            number = 0;
+        }
+        
+        // Format the number with commas and 2 decimal places
+        if (isBlur || value.includes('.')) {
+            // Always show 2 decimal places on blur
+            input.value = number.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            // During input, don't force decimal places
+            input.value = number.toLocaleString('en-US');
+        }
+    }
+    
+    // Submit handling to remove formatting before sending to server
+    const form = costInput.closest('form');
+    form.addEventListener('submit', function() {
+        costInput.value = costInput.value.replace(/,/g, '');
+    });
+});
+</script>
 @endsection 

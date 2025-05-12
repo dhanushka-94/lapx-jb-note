@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Job extends Model
 {
@@ -72,17 +73,42 @@ class Job extends Model
     }
 
     /**
+     * Get the status history for the job.
+     */
+    public function statusHistory(): HasMany
+    {
+        return $this->hasMany(JobStatusHistory::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Record a status change in history.
+     */
+    public function recordStatusChange(string $status, ?int $userId = null, ?string $notes = null): void
+    {
+        $this->statusHistory()->create([
+            'status' => $status,
+            'user_id' => $userId,
+            'notes' => $notes,
+        ]);
+    }
+
+    /**
      * Generate a unique job number.
      */
     public static function generateJobNumber(): string
     {
-        $prefix = 'JOB';
-        $year = date('Y');
-        $month = date('m');
+        $prefix = 'LPXTS';
         
         $lastJob = self::latest()->first();
-        $number = $lastJob ? (intval(substr($lastJob->job_number, -5)) + 1) : 1;
         
-        return $prefix . $year . $month . str_pad($number, 5, '0', STR_PAD_LEFT);
+        // Get the sequence number from the last job or start with 1
+        if ($lastJob && preg_match('/^LPXTS(\d+)$/', $lastJob->job_number, $matches)) {
+            $sequence = intval($matches[1]) + 1;
+        } else {
+            $sequence = 1;
+        }
+        
+        // Format: LPXTS + XXXXX (5-digit incremental number padded with zeros)
+        return $prefix . str_pad($sequence, 5, '0', STR_PAD_LEFT);
     }
 }

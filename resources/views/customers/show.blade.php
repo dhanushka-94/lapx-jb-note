@@ -39,8 +39,20 @@
                 <p class="mt-1 text-lg text-gray-800">{{ $customer->email ?: 'N/A' }}</p>
             </div>
             <div>
-                <h4 class="text-sm font-medium text-gray-500">Phone</h4>
-                <p class="mt-1 text-lg text-gray-800">{{ $customer->phone }}</p>
+                <h4 class="text-sm font-medium text-gray-500">Phone Number 1</h4>
+                <p class="mt-1 text-lg text-gray-800">{{ $customer->formatted_phone_number_1 }}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Phone Number 2</h4>
+                <p class="mt-1 text-lg text-gray-800">{{ $customer->formatted_phone_number_2 ?: 'N/A' }}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">Home Phone</h4>
+                <p class="mt-1 text-lg text-gray-800">{{ $customer->formatted_home_phone_number ?: 'N/A' }}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">WhatsApp Number</h4>
+                <p class="mt-1 text-lg text-gray-800">{{ $customer->formatted_whatsapp_number ?: 'N/A' }}</p>
             </div>
             <div>
                 <h4 class="text-sm font-medium text-gray-500">Address</h4>
@@ -49,6 +61,26 @@
             <div class="md:col-span-2">
                 <h4 class="text-sm font-medium text-gray-500">Notes</h4>
                 <p class="mt-1 text-lg text-gray-800">{{ $customer->notes ?: 'No notes available' }}</p>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-500">SMS Notifications</h4>
+                <p class="mt-1 text-lg">
+                    @if($customer->disable_sms)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Disabled
+                        </span>
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Enabled
+                        </span>
+                    @endif
+                </p>
             </div>
         </div>
     </div>
@@ -71,7 +103,7 @@
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job #</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Cost</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Received Date</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
@@ -104,7 +136,7 @@
                                 {{ $statusLabels[$job->status] }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${{ number_format($job->cost, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">LKR {{ number_format($job->cost, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $job->received_date->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <a href="{{ route('jobs.show', $job) }}" class="text-blue-600 hover:text-blue-900">

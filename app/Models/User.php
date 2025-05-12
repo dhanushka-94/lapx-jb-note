@@ -22,6 +22,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
+        'phone_number',
+        'skills',
+        'is_active',
     ];
 
     /**
@@ -44,6 +48,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -53,5 +58,26 @@ class User extends Authenticatable
     public function assignedJobs(): HasMany
     {
         return $this->hasMany(Job::class, 'assigned_to');
+    }
+
+    /**
+     * Scope a query to only include technicians.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeTechnicians($query)
+    {
+        return $query->where('role', 'technician');
+    }
+
+    /**
+     * Check if the user is a technician.
+     *
+     * @return bool
+     */
+    public function isTechnician()
+    {
+        return $this->role === 'technician';
     }
 }

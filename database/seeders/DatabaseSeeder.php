@@ -27,5 +27,21 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
             'password' => Hash::make('password123'),
         ]);
+
+        // Create technician
+        User::create([
+            'name' => 'John Technician',
+            'email' => 'tech@example.com',
+            'password' => Hash::make('password123'),
+            'role' => 'technician',
+            'phone_number' => '0771234567',
+            'skills' => 'Laptop repair, Smartphone screen replacement, Virus removal',
+            'is_active' => true,
+        ]);
+
+        // Seed demo data
+        $this->call([
+            DemoDataSeeder::class,
+        ]);
     }
 }

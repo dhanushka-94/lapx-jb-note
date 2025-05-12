@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PhoneNumberFormatter;
+use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 
@@ -10,9 +12,31 @@ class CustomerController extends Controller
     /**
      * Display a listing of the customers.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::latest()->paginate(10);
+        $query = Customer::query();
+        
+        // Apply search filters if provided
+        if ($request->has('search') && $request->search != '') {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('email', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('phone_number_1', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('phone_number_2', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('home_phone_number', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('whatsapp_number', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('address', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        $customers = $query->latest()->paginate(10);
+        
+        // Append search query to pagination links
+        if ($request->has('search')) {
+            $customers->appends(['search' => $request->search]);
+        }
+        
         return view('customers.index', compact('customers'));
     }
 
@@ -27,19 +51,10 @@ class CustomerController extends Controller
     /**
      * Store a newly created customer in storage.
      */
-    public function store(Request $request)
+    public function store(CustomerRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone_number_1' => 'required|string|max:20',
-            'phone_number_2' => 'nullable|string|max:20',
-            'home_phone_number' => 'nullable|string|max:20',
-            'whatsapp_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'notes' => 'nullable|string',
-        ]);
-
+        $validated = $request->validated();
+        
         Customer::create($validated);
 
         return redirect()->route('customers.index')
@@ -51,6 +66,12 @@ class CustomerController extends Controller
      */
     public function show(Customer $customer)
     {
+        // Format phone numbers for display
+        $customer->phone_number_1 = PhoneNumberFormatter::format($customer->phone_number_1);
+        $customer->phone_number_2 = PhoneNumberFormatter::format($customer->phone_number_2);
+        $customer->home_phone_number = PhoneNumberFormatter::format($customer->home_phone_number);
+        $customer->whatsapp_number = PhoneNumberFormatter::format($customer->whatsapp_number);
+        
         // Load the customer's jobs
         $customer->load('jobs');
         
@@ -68,19 +89,10 @@ class CustomerController extends Controller
     /**
      * Update the specified customer in storage.
      */
-    public function update(Request $request, Customer $customer)
+    public function update(CustomerRequest $request, Customer $customer)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone_number_1' => 'required|string|max:20',
-            'phone_number_2' => 'nullable|string|max:20',
-            'home_phone_number' => 'nullable|string|max:20',
-            'whatsapp_number' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'notes' => 'nullable|string',
-        ]);
-
+        $validated = $request->validated();
+        
         $customer->update($validated);
 
         return redirect()->route('customers.index')

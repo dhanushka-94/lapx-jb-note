@@ -33,20 +33,56 @@
                     @enderror
                 </div>
                 
-                <!-- Customer Selection -->
+                <!-- Customer Selection with Search -->
                 <div class="md:col-span-2">
-                    <label for="customer_id" class="block text-sm font-medium text-gray-700 mb-1">Customer <span class="text-red-600">*</span></label>
-                    <select name="customer_id" id="customer_id" class="form-select rounded-md shadow-sm mt-1 block w-full @error('customer_id') border-red-500 @enderror" required>
-                        <option value="">Select a customer</option>
-                        @foreach($customers as $customer)
-                            <option value="{{ $customer->id }}" {{ (old('customer_id') == $customer->id || request('customer_id') == $customer->id) ? 'selected' : '' }}>
-                                {{ $customer->name }} ({{ $customer->phone }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('customer_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
+                    <label for="customer_search" class="block text-sm font-medium text-gray-700 mb-1">Customer <span class="text-red-600">*</span></label>
+                    <div class="relative">
+                        <div class="flex">
+                            <div class="relative flex-grow">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <i class="fas fa-search text-gray-400"></i>
+                                </div>
+                                <input 
+                                    type="text" 
+                                    id="customer_search" 
+                                    placeholder="Search for customer by name or phone..." 
+                                    class="form-input pl-10 block w-full rounded-md border-gray-300 shadow-sm focus:ring-[#0a2463] focus:border-[#0a2463]"
+                                >
+                                <div id="customer_search_results" class="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-md hidden max-h-60 overflow-y-auto"></div>
+                            </div>
+                            <button type="button" id="clear_customer" class="ml-2 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0a2463]">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div id="selected_customer_info" class="mt-2 p-3 border border-gray-200 rounded-md bg-gray-50 hidden">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold">
+                                    <span id="customer_initial"></span>
+                                </div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900" id="customer_name_display"></div>
+                                    <div class="text-sm text-gray-500" id="customer_phone_display"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <select name="customer_id" id="customer_id" class="hidden" required>
+                            <option value="">Select a customer</option>
+                            @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}" 
+                                        data-name="{{ $customer->name }}" 
+                                        data-phone="{{ $customer->formatted_phone_number_1 ?? $customer->phone_number_1 }}" 
+                                        data-initial="{{ substr($customer->name, 0, 1) }}"
+                                        {{ (old('customer_id') == $customer->id || request('customer_id') == $customer->id) ? 'selected' : '' }}>
+                                    {{ $customer->name }} ({{ $customer->formatted_phone_number_1 ?? $customer->phone_number_1 }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('customer_id')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
                 </div>
             </div>
             
@@ -119,11 +155,13 @@
                 
                 <!-- Assigned To -->
                 <div>
-                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-1">Assign To Technician</label>
                     <select name="assigned_to" id="assigned_to" class="form-select rounded-md shadow-sm mt-1 block w-full @error('assigned_to') border-red-500 @enderror">
                         <option value="">Not assigned</option>
                         @foreach($users as $user)
-                            <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @if($user->role == 'technician' && $user->is_active)
+                                <option value="{{ $user->id }}" {{ old('assigned_to') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                            @endif
                         @endforeach
                     </select>
                     @error('assigned_to')
@@ -133,8 +171,8 @@
                 
                 <!-- Cost -->
                 <div>
-                    <label for="cost" class="block text-sm font-medium text-gray-700 mb-1">Cost ($)</label>
-                    <input type="number" name="cost" id="cost" value="{{ old('cost', '0.00') }}" step="0.01" min="0" class="form-input rounded-md shadow-sm mt-1 block w-full @error('cost') border-red-500 @enderror" placeholder="0.00">
+                    <label for="cost" class="block text-sm font-medium text-gray-700 mb-1">Estimated Cost (LKR)</label>
+                    <input type="text" name="cost" id="cost" value="{{ old('cost', '0.00') }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('cost') border-red-500 @enderror" placeholder="0.00">
                     @error('cost')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
@@ -230,4 +268,178 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const customerSelect = document.getElementById('customer_id');
+    const customerSearch = document.getElementById('customer_search');
+    const searchResults = document.getElementById('customer_search_results');
+    const selectedCustomerInfo = document.getElementById('selected_customer_info');
+    const customerNameDisplay = document.getElementById('customer_name_display');
+    const customerPhoneDisplay = document.getElementById('customer_phone_display');
+    const customerInitial = document.getElementById('customer_initial');
+    const clearCustomerBtn = document.getElementById('clear_customer');
+    
+    // Display the selected customer if one is already set (e.g. from old input)
+    if (customerSelect.value) {
+        const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+        displaySelectedCustomer(
+            selectedOption.value,
+            selectedOption.dataset.name,
+            selectedOption.dataset.phone,
+            selectedOption.dataset.initial
+        );
+    }
+    
+    // Customer search functionality
+    customerSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        if (searchTerm.length < 2) {
+            searchResults.classList.add('hidden');
+            return;
+        }
+        
+        // Filter customers based on search
+        searchResults.innerHTML = '';
+        searchResults.classList.remove('hidden');
+        
+        let matchFound = false;
+        const allOptions = Array.from(customerSelect.options).slice(1); // Skip the placeholder
+        
+        allOptions.forEach(option => {
+            const customerName = option.dataset.name.toLowerCase();
+            const customerPhone = option.dataset.phone.toLowerCase();
+            
+            if (customerName.includes(searchTerm) || customerPhone.includes(searchTerm)) {
+                matchFound = true;
+                const resultItem = document.createElement('div');
+                resultItem.className = 'px-4 py-2 cursor-pointer hover:bg-blue-50 transition-colors duration-150';
+                resultItem.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold">
+                            ${option.dataset.initial}
+                        </div>
+                        <div class="ml-3">
+                            <div class="text-sm font-medium text-gray-900">${option.dataset.name}</div>
+                            <div class="text-xs text-gray-500">${option.dataset.phone}</div>
+                        </div>
+                    </div>
+                `;
+                
+                resultItem.addEventListener('click', function() {
+                    displaySelectedCustomer(
+                        option.value,
+                        option.dataset.name,
+                        option.dataset.phone,
+                        option.dataset.initial
+                    );
+                    searchResults.classList.add('hidden');
+                    customerSearch.value = '';
+                });
+                
+                searchResults.appendChild(resultItem);
+            }
+        });
+        
+        if (!matchFound) {
+            const noResults = document.createElement('div');
+            noResults.className = 'px-4 py-2 text-gray-500 text-sm';
+            noResults.textContent = 'No customers found';
+            searchResults.appendChild(noResults);
+        }
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!customerSearch.contains(e.target) && !searchResults.contains(e.target)) {
+            searchResults.classList.add('hidden');
+        }
+    });
+    
+    // Clear selected customer
+    clearCustomerBtn.addEventListener('click', function() {
+        customerSelect.value = '';
+        selectedCustomerInfo.classList.add('hidden');
+        customerSearch.value = '';
+    });
+    
+    function displaySelectedCustomer(id, name, phone, initial) {
+        customerSelect.value = id;
+        customerNameDisplay.textContent = name;
+        customerPhoneDisplay.textContent = phone;
+        customerInitial.textContent = initial;
+        selectedCustomerInfo.classList.remove('hidden');
+    }
+    
+    // Sri Lankan price formatting
+    const costInput = document.getElementById('cost');
+    
+    // Format on initial load
+    formatCurrency(costInput);
+    
+    // Clear the field on focus
+    costInput.addEventListener('focus', function(e) {
+        // Save the current value for restoring if the user doesn't enter anything
+        this.dataset.previousValue = this.value;
+        // Clear the input
+        this.value = '';
+    });
+    
+    // Format on input change
+    costInput.addEventListener('input', function(e) {
+        if (this.value !== '') {
+            formatCurrency(this);
+        }
+    });
+    
+    // Format on focus out (to ensure complete formatting)
+    costInput.addEventListener('blur', function(e) {
+        // If the field was left empty, restore the previous value
+        if (this.value === '') {
+            this.value = this.dataset.previousValue || '0.00';
+        }
+        formatCurrency(this, true);
+    });
+    
+    function formatCurrency(input, isBlur = false) {
+        // Get input value and remove all non-numeric characters except decimal point
+        let value = input.value.replace(/[^\d.]/g, '');
+        
+        // Handle multiple decimal points - keep only the first one
+        let parts = value.split('.');
+        if (parts.length > 2) {
+            value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Handle leading decimal point
+        if (value.startsWith('.')) {
+            value = '0' + value;
+        }
+        
+        // Convert to number and back to string to normalize
+        let number = parseFloat(value);
+        if (isNaN(number)) {
+            number = 0;
+        }
+        
+        // Format the number with commas and 2 decimal places
+        if (isBlur || value.includes('.')) {
+            // Always show 2 decimal places on blur
+            input.value = number.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } else {
+            // During input, don't force decimal places
+            input.value = number.toLocaleString('en-US');
+        }
+    }
+    
+    // Submit handling to remove formatting before sending to server
+    const form = costInput.closest('form');
+    form.addEventListener('submit', function() {
+        costInput.value = costInput.value.replace(/,/g, '');
+    });
+});
+</script>
 @endsection 

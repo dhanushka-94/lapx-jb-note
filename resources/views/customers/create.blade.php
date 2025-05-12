@@ -49,7 +49,13 @@
                     <label for="phone_number_1" class="block text-sm font-medium text-gray-700 mb-1">
                         <i class="fas fa-mobile-alt text-gray-400 mr-1"></i>Phone Number 1 <span class="text-red-600">*</span>
                     </label>
-                    <input type="text" name="phone_number_1" id="phone_number_1" value="{{ old('phone_number_1') }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('phone_number_1') border-red-500 @enderror" placeholder="Primary mobile number" required>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            +94
+                        </span>
+                        <input type="text" name="phone_number_1" id="phone_number_1" value="{{ old('phone_number_1') }}" class="form-input rounded-md shadow-sm pl-10 mt-1 block w-full @error('phone_number_1') border-red-500 @enderror" placeholder="7X XXX XXXX" required>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Format: +94 7X XXX XXXX (Sri Lankan mobile format)</p>
                     @error('phone_number_1')
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
@@ -60,7 +66,13 @@
                     <label for="phone_number_2" class="block text-sm font-medium text-gray-700 mb-1">
                         <i class="fas fa-mobile text-gray-400 mr-1"></i>Phone Number 2
                     </label>
-                    <input type="text" name="phone_number_2" id="phone_number_2" value="{{ old('phone_number_2') }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('phone_number_2') border-red-500 @enderror" placeholder="Secondary mobile number">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            +94
+                        </span>
+                        <input type="text" name="phone_number_2" id="phone_number_2" value="{{ old('phone_number_2') }}" class="form-input rounded-md shadow-sm pl-10 mt-1 block w-full @error('phone_number_2') border-red-500 @enderror" placeholder="7X XXX XXXX">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Format: +94 7X XXX XXXX (Sri Lankan mobile format)</p>
                     @error('phone_number_2')
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
@@ -71,7 +83,13 @@
                     <label for="home_phone_number" class="block text-sm font-medium text-gray-700 mb-1">
                         <i class="fas fa-phone text-gray-400 mr-1"></i>Home Phone Number
                     </label>
-                    <input type="text" name="home_phone_number" id="home_phone_number" value="{{ old('home_phone_number') }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('home_phone_number') border-red-500 @enderror" placeholder="Landline number">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            +94
+                        </span>
+                        <input type="text" name="home_phone_number" id="home_phone_number" value="{{ old('home_phone_number') }}" class="form-input rounded-md shadow-sm pl-10 mt-1 block w-full @error('home_phone_number') border-red-500 @enderror" placeholder="XX XXX XXXX">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Format: +94 XX XXX XXXX (Sri Lankan landline format)</p>
                     @error('home_phone_number')
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
@@ -82,7 +100,13 @@
                     <label for="whatsapp_number" class="block text-sm font-medium text-gray-700 mb-1">
                         <i class="fab fa-whatsapp text-gray-400 mr-1"></i>WhatsApp Number
                     </label>
-                    <input type="text" name="whatsapp_number" id="whatsapp_number" value="{{ old('whatsapp_number') }}" class="form-input rounded-md shadow-sm mt-1 block w-full @error('whatsapp_number') border-red-500 @enderror" placeholder="WhatsApp contact number">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">
+                            +94
+                        </span>
+                        <input type="text" name="whatsapp_number" id="whatsapp_number" value="{{ old('whatsapp_number') }}" class="form-input rounded-md shadow-sm pl-10 mt-1 block w-full @error('whatsapp_number') border-red-500 @enderror" placeholder="7X XXX XXXX">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Format: +94 7X XXX XXXX (Sri Lankan mobile format)</p>
                     @error('whatsapp_number')
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
@@ -109,6 +133,17 @@
                         <p class="text-red-500 text-xs mt-1 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}</p>
                     @enderror
                 </div>
+                
+                <!-- Disable SMS Field -->
+                <div class="md:col-span-2">
+                    <div class="flex items-center mt-2">
+                        <input type="checkbox" name="disable_sms" id="disable_sms" value="1" {{ old('disable_sms') ? 'checked' : '' }} class="rounded text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <label for="disable_sms" class="ml-2 block text-sm text-gray-700">
+                            <i class="fas fa-sms text-gray-400 mr-1"></i>Disable SMS notifications for this customer
+                        </label>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1 ml-6">Check this box if the customer has requested not to receive SMS notifications about service jobs.</p>
+                </div>
             </div>
             
             <div class="border-t border-gray-200 pt-6">
@@ -122,4 +157,50 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Phone number formatting
+        const phoneInputs = [
+            document.getElementById('phone_number_1'),
+            document.getElementById('phone_number_2'),
+            document.getElementById('home_phone_number'),
+            document.getElementById('whatsapp_number')
+        ];
+        
+        phoneInputs.forEach(input => {
+            if (!input) return;
+            
+            input.addEventListener('input', function(e) {
+                let value = e.target.value;
+                
+                // Remove any non-numeric characters
+                value = value.replace(/\D/g, '');
+                
+                // Remove leading zero if present
+                if (value.startsWith('0')) {
+                    value = value.substring(1);
+                }
+                
+                // Limit to 9 digits
+                if (value.length > 9) {
+                    value = value.substring(0, 9);
+                }
+                
+                // Apply formatting for readability (XX XXX XXXX)
+                if (value.length > 0) {
+                    let formatted = '';
+                    if (value.length <= 2) {
+                        formatted = value;
+                    } else if (value.length <= 5) {
+                        formatted = value.substring(0, 2) + ' ' + value.substring(2);
+                    } else {
+                        formatted = value.substring(0, 2) + ' ' + value.substring(2, 5) + ' ' + value.substring(5);
+                    }
+                    e.target.value = formatted;
+                }
+            });
+        });
+    });
+</script>
 @endsection 

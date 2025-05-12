@@ -14,6 +14,12 @@
                 </svg>
                 Edit Job
             </a>
+            <a href="{{ route('jobs.receipt', $job) }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Receipt
+            </a>
             <a href="{{ route('jobs.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-medium text-sm text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
                 <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -62,7 +68,7 @@
                     </div>
                     <div>
                         <h4 class="text-sm font-medium text-gray-500">Received Date</h4>
-                        <p class="mt-1 text-lg text-gray-800">{{ $job->received_date->format('M d, Y') }}</p>
+                        <p class="mt-1 text-lg text-gray-800">{{ $job->received_date->format('Y-m-d') }}</p>
                     </div>
                     <div>
                         <h4 class="text-sm font-medium text-gray-500">Device Type</h4>
@@ -78,7 +84,7 @@
                     </div>
                     <div>
                         <h4 class="text-sm font-medium text-gray-500">Estimated Completion</h4>
-                        <p class="mt-1 text-lg text-gray-800">{{ $job->estimated_completion_date ? $job->estimated_completion_date->format('M d, Y') : 'Not set' }}</p>
+                        <p class="mt-1 text-lg text-gray-800">{{ $job->estimated_completion_date ? $job->estimated_completion_date->format('Y-m-d') : 'Not set' }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <h4 class="text-sm font-medium text-gray-500">Issue Description</h4>
@@ -116,7 +122,9 @@
                     <ul class="-mb-8">
                         <li>
                             <div class="relative pb-8">
+                                @if(count($job->statusHistory) > 0 || $job->status != 'pending')
                                 <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                @endif
                                 <div class="relative flex space-x-3">
                                     <div>
                                         <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
@@ -130,90 +138,65 @@
                                             <p class="text-sm text-gray-500">Job received</p>
                                         </div>
                                         <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                            {{ $job->received_date->format('M d, Y') }}
+                                            {{ $job->received_date->format('Y-m-d') }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </li>
                         
-                        @if($job->status != 'pending')
+                        @foreach($job->statusHistory as $history)
                         <li>
                             <div class="relative pb-8">
-                                @if($job->status != 'in_progress' || $job->completed_date || $job->delivered_date)
+                                @if(!$loop->last)
                                 <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
                                 @endif
                                 <div class="relative flex space-x-3">
                                     <div>
-                                        <span class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center ring-8 ring-white">
+                                        @php
+                                            $iconColor = 'bg-blue-500';
+                                            $iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />';
+                                            
+                                            if ($history->status == 'completed') {
+                                                $iconColor = 'bg-green-500';
+                                                $iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
+                                            } elseif ($history->status == 'delivered') {
+                                                $iconColor = 'bg-indigo-500';
+                                                $iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />';
+                                            } elseif ($history->status == 'waiting_for_parts') {
+                                                $iconColor = 'bg-purple-500';
+                                                $iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />';
+                                            } elseif ($history->status == 'cancelled') {
+                                                $iconColor = 'bg-red-500';
+                                                $iconSvg = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />';
+                                            }
+                                        @endphp
+                                        <span class="h-8 w-8 rounded-full {{ $iconColor }} flex items-center justify-center ring-8 ring-white">
                                             <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                                {!! $iconSvg !!}
                                             </svg>
                                         </span>
                                     </div>
                                     <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                         <div>
-                                            <p class="text-sm text-gray-500">Work started</p>
+                                            <p class="text-sm text-gray-500">
+                                                Status changed to <span class="font-medium">{{ ucfirst(str_replace('_', ' ', $history->status)) }}</span>
+                                                @if($history->notes)
+                                                <span class="block mt-1 text-xs text-gray-500">{{ $history->notes }}</span>
+                                                @endif
+                                            </p>
+                                            @if($history->user)
+                                            <p class="text-xs text-gray-400 mt-1">by {{ $history->user->name }}</p>
+                                            @endif
                                         </div>
                                         <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                            {{ $job->created_at->format('M d, Y') }}
+                                            {{ $history->created_at->format('Y-m-d h:i A') }}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </li>
-                        @endif
-                        
-                        @if($job->completed_date)
-                        <li>
-                            <div class="relative pb-8">
-                                @if($job->delivered_date)
-                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
-                                @endif
-                                <div class="relative flex space-x-3">
-                                    <div>
-                                        <span class="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center ring-8 ring-white">
-                                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
-                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                        <div>
-                                            <p class="text-sm text-gray-500">Repair completed</p>
-                                        </div>
-                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                            {{ $job->completed_date->format('M d, Y') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        @endif
-                        
-                        @if($job->delivered_date)
-                        <li>
-                            <div class="relative">
-                                <div class="relative flex space-x-3">
-                                    <div>
-                                        <span class="h-8 w-8 rounded-full bg-indigo-500 flex items-center justify-center ring-8 ring-white">
-                                            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
-                                            </svg>
-                                        </span>
-                                    </div>
-                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
-                                        <div>
-                                            <p class="text-sm text-gray-500">Device delivered to customer</p>
-                                        </div>
-                                        <div class="text-right text-sm whitespace-nowrap text-gray-500">
-                                            {{ $job->delivered_date->format('M d, Y') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </li>
-                        @endif
+                        @endforeach
                     </ul>
                 </div>
             </div>
@@ -284,8 +267,8 @@
                     </div>
                     
                     <div>
-                        <h4 class="text-sm font-medium text-gray-500">Cost</h4>
-                        <p class="mt-1 text-lg font-bold text-gray-800">${{ number_format($job->cost, 2) }}</p>
+                        <h4 class="text-sm font-medium text-gray-500">Estimated Cost</h4>
+                        <p class="mt-1 text-lg font-bold text-gray-800">LKR {{ number_format($job->cost, 2) }}</p>
                     </div>
                     
                     <div class="border-t border-gray-200 pt-4">
